@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>#4471 was three problems, not one · support kb</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1d1d1b; --muted: #6b6a66; --line: #e3e0d8;
+    --accent: #2f6f5e; --warn: #b4501f; --warn-bg: #fbeee6; --note-bg: #eef5f2;
+    --mono: ui-monospace, 'Cascadia Code', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #171716; --fg: #ecebe6; --muted: #9c9a93; --line: #34332f;
+      --accent: #6fbfa6; --warn: #f0905d; --warn-bg: #3a2418; --note-bg: #1d2c27;
+    }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, sans-serif; }
+  .kb table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.92rem; }
+  .kb th, .kb td { border-bottom: 1px solid var(--line); padding: 0.35rem 0.5rem; text-align: left; vertical-align: top; }
+  .kb code { font-family: var(--mono); font-size: 0.88em; }
+  .kb a { color: var(--accent); }
+  .kb { max-width: 760px; margin: 0 auto; padding: 2rem 16px 4rem; }
+  .crumb { font: 0.8rem var(--mono); text-decoration: none; color: var(--muted); }
+  h1 { margin: 0.25rem 0 0.5rem; line-height: 1.2; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; color: var(--muted); font-size: 0.85rem; margin: 0; }
+  .status { border: 1px solid var(--line); border-radius: 99px; padding: 0 0.6rem; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: 0.8rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+
+  /* Callout.svelte */
+  aside.note, aside.warn { border-left: 4px solid var(--accent); padding: 0.5rem 1rem; margin: 1rem 0; background: var(--note-bg); }
+  aside.warn { border-color: var(--warn); background: var(--warn-bg); }
+
+  /* RenderStamp.svelte */
+  .stamp { margin: 2rem 0 0; font: 0.85rem var(--mono); color: var(--muted); }
+  .stamp b { color: var(--accent); letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+<div class="kb">
+  <header>
+    <a class="crumb" href="/kb">support desk · kb</a>
+    <h1>#4471 was three problems, not one</h1>
+    <p class="meta">
+      <span>owner <b>support desk</b></span>
+      <span class="status proposed">proposed</span>
+      <span>reviewed 2026-10-29 · 0 days ago</span>
+    </p>
+  </header>
+  <main>
+
+<p><a href="/kb/incidents/4471">#4471</a> merged 412 reports into one "known" issue: <em>the parser reads dates
+month first, tenants write day first</em>. That rule comes from
+<a href="/kb/decisions/0001-dedupe-by-subject">decision 0001</a>: a report is a duplicate when its subject
+matches an open ticket's. Nobody has to read the body to merge on subject. Nobody did.</p>
+
+<p>Reading the bodies and running <code>causes.ts</code> against the real tenant data shows #4471 is not one
+bug. It is three.</p>
+
+<aside class="warn">Same subject line, different bug. The desk's own dedupe rule is what hid this.</aside>
+
+<h2>The three problems</h2>
+
+<table>
+  <thead><tr><th>problem</th><th>reports</th><th>tenants</th><th>what is actually happening</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>parser reads month-first</td>
+      <td><b>374</b></td>
+      <td>all 11</td>
+      <td>Every tenant here writes day-first dates. The shared parser always reads <code>MM/DD</code>, so app, email, and <code>booking-v2</code>-form submissions come out with month and day swapped.</td>
+    </tr>
+    <tr>
+      <td><code>booking-v3</code> hint mismatches locale</td>
+      <td><b>33</b></td>
+      <td>alder.physio, copper.studio, pale.harbour</td>
+      <td>The <code>booking-v3</code> form prints a <code>MM/DD/YYYY</code> hint to tenants whose locale is day-first. People type what the hint says; the form then parses it the tenant's (day-first) way. Same symptom as the row above, different cause, a different fix.</td>
+    </tr>
+    <tr>
+      <td>one-day shift, not a swap</td>
+      <td><b>5</b></td>
+      <td>kettle.books, alder.physio, nine.lanterns, pale.harbour, lantern.row</td>
+      <td>Reports like "12 May showed as 11 May" and "Lisbon got Tuesday, Toronto got Monday, same meeting" are off by exactly one day, same month. A month/day swap does not produce that. This looks like a timezone/DST bug, unrelated to the other two.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>374 + 33 + 5 = 412 — the whole of #4471.</p>
+
+<h2>How the first two were found</h2>
+
+<p><code>causes.ts</code> already splits <code>parser</code> from <code>hint</code> by tenant locale and form (<code>groupByCause</code>). Its
+<code>CauseTable</code> component renders both rows for #4471 today, and marks whichever one isn't the
+ticket's main cause as <em>"not this ticket — no ticket of its own"</em>. That table was the start:
+the split was already computed, just never given a ticket.</p>
+
+<h2>How the third was found</h2>
+
+<p><code>causes.ts</code> has no notion of a one-day shift — it only tells <code>parser</code> from <code>hint</code>. The desk's own
+<code>desk-notes.json</code> carries an <code>oneDayMove</code> list of five report ids, read differently by whoever
+triaged them, but only ever shown as a footnote under whichever cause they happened to land in.
+Reading those five bodies: none of them describe a swapped month and day. All of them describe a
+date that is one day off, in the same month. They were merged into #4471 because their subject
+lines matched, not because they are the same bug:</p>
+
+<ul>
+  <li><code>R-41202</code> (kettle.books, email) — invite said Tuesday 12 May, calendar said Monday 11 May.</li>
+  <li><code>R-41209</code> (alder.physio, app) — "Every booking in June is one day off. Only June."</li>
+  <li><code>R-41236</code> (nine.lanterns, app) — "The invite arrived before I made the booking."</li>
+  <li><code>R-41344</code> (pale.harbour, email) — same meeting, Tuesday in Lisbon, Monday in Toronto.</li>
+  <li><code>R-41620</code> (lantern.row, email) — "Tuesday 6 October showed as Monday. I moved it myself."</li>
+</ul>
+
+<h2>Tickets filed</h2>
+
+<p>One GitHub issue per row above, each carrying its report count and its evidence.</p>
+
+<h2>Lessons</h2>
+
+<ul>
+  <li>Subject-line dedupe (<a href="/kb/decisions/0001-dedupe-by-subject">decision 0001</a>) merges fast and
+  merges wrong: it can put two different bugs in one ticket as easily as it splits one bug into
+  two.</li>
+  <li>A table that already shows a second cause (<code>CauseTable</code>, on <code>#4471</code> today) is a problem without
+  a ticket, not a curiosity.</li>
+  <li>A footnote (<code>desk-notes.json</code>'s <code>oneDayMove</code>) is where a third bug hides when nobody reads the
+  bodies behind a "known" ticket.</li>
+</ul>
+
+<p class="stamp">desk ref <b>DR-100M-MJF5</b></p>
+
+  </main>
+  <footer>Pages are written by people. Tables and charts are built from data at render time.</footer>
+</div>
+</body>
+</html>
