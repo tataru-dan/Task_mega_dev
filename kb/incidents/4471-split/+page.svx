@@ -62,6 +62,17 @@ lines matched, not because they are the same bug:
 
 One GitHub issue per row above, each carrying its report count and its evidence.
 
+## Engineering update, #4471 closed 05 Oct
+
+| ticket | report count | status | note |
+|---|---|---|---|
+| parser reads month-first | 379 | **fixed** | `fix(dates): parse dd/mm for eu locales` |
+| `booking-v3` hint mismatches locale | 33 | **won't fix** | `booking-v3` form retired |
+| one-day shift, not a swap | 5 | **open** | not part of this engineering pass — still unexplained |
+
+Tickets closed to match: the parser ticket as completed, the hint ticket as not planned. The
+one-day-shift ticket stays open — this update never touched it.
+
 ## Lessons
 
 - Subject-line dedupe ([decision 0001](/kb/decisions/0001-dedupe-by-subject)) merges fast and

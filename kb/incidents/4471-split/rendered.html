@@ -118,6 +118,20 @@ lines matched, not because they are the same bug:</p>
 
 <p>One GitHub issue per row above, each carrying its report count and its evidence.</p>
 
+<h2>Engineering update, #4471 closed 05 Oct</h2>
+
+<table>
+  <thead><tr><th>ticket</th><th>report count</th><th>status</th><th>note</th></tr></thead>
+  <tbody>
+    <tr><td>parser reads month-first</td><td>379</td><td><b>fixed</b></td><td><code>fix(dates): parse dd/mm for eu locales</code></td></tr>
+    <tr><td><code>booking-v3</code> hint mismatches locale</td><td>33</td><td><b>won't fix</b></td><td><code>booking-v3</code> form retired</td></tr>
+    <tr><td>one-day shift, not a swap</td><td>5</td><td><b>open</b></td><td>not part of this engineering pass — still unexplained</td></tr>
+  </tbody>
+</table>
+
+<p>Tickets closed to match: the parser ticket as completed, the hint ticket as not planned. The
+one-day-shift ticket stays open — this update never touched it.</p>
+
 <h2>Lessons</h2>
 
 <ul>

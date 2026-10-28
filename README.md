@@ -10,8 +10,8 @@ on subject line alone.
   as the desk would see it.
 - the [Issues](../../issues) tab — one ticket per problem, each with its report count.
 
-| problem | reports |
-|---|---|
-| parser reads month-first | 379 (desk's own cause split) |
-| `booking-v3` hint mismatches locale | 33 (desk's own cause split) |
-| one-day shift, not a swap | 5 (inside the 379 above, not separate from it) |
+| problem | reports | status |
+|---|---|---|
+| parser reads month-first | 379 (desk's own cause split) | closed — fixed |
+| `booking-v3` hint mismatches locale | 33 (desk's own cause split) | closed — won't fix (form retired) |
+| one-day shift, not a swap | 5 (inside the 379 above, not separate from it) | open |
