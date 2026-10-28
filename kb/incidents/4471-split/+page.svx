@@ -26,13 +26,15 @@ Same subject line, different bug. The desk's own dedupe rule is what hid this.
 
 ## The three problems
 
+#4471 holds 412 unique reports (427 rows in the export, 15 of them re-sent across overlapping
+export pages). `causes.ts`'s own `groupByCause` splits them 379 / 33 by cause. A third problem
+sits inside that 379, found only by reading bodies, not counted by `causes.ts` at all.
+
 | problem | reports | tenants | what is actually happening |
 |---|---|---|---|
-| parser reads month-first | **374** | all 11 | Every tenant here writes day-first dates. The shared parser always reads `MM/DD`, so app, email, and `booking-v2`-form submissions come out with month and day swapped. |
-| `booking-v3` hint mismatches locale | **33** | alder.physio, copper.studio, pale.harbour | The `booking-v3` form prints a `MM/DD/YYYY` hint to tenants whose locale is day-first. People type what the hint says; the form then parses it the tenant's (day-first) way. Same symptom as the row above, different cause, a different fix. |
-| one-day shift, not a swap | **5** | kettle.books, alder.physio, nine.lanterns, pale.harbour, lantern.row | Reports like *"12 May showed as 11 May"* and *"Lisbon got Tuesday, Toronto got Monday, same meeting"* are off by exactly one day, same month. A month/day swap does not produce that. This looks like a timezone/DST bug, unrelated to the other two. |
-
-374 + 33 + 5 = 412 — the whole of #4471.
+| parser reads month-first | **379** (desk's own cause split) | all 11 | Every tenant here writes day-first dates. The shared parser always reads `MM/DD`, so app, email, and `booking-v2`-form submissions come out with month and day swapped. |
+| `booking-v3` hint mismatches locale | **33** (desk's own cause split) | alder.physio, copper.studio, pale.harbour | The `booking-v3` form prints a `MM/DD/YYYY` hint to tenants whose locale is day-first. People type what the hint says; the form then parses it the tenant's (day-first) way. Same symptom as the row above, different cause, a different fix. |
+| one-day shift, not a swap | **5** (inside the 379 above, not separate from it) | kettle.books, alder.physio, nine.lanterns, pale.harbour, lantern.row | Reports like *"12 May showed as 11 May"* and *"Lisbon got Tuesday, Toronto got Monday, same meeting"* are off by exactly one day, same month. A month/day swap does not produce that. `causes.ts` has no category for this, so `groupByCause` counts these 5 as `parser` anyway. They are a third, unrelated bug, not a parser miss. |
 
 ## How the first two were found
 

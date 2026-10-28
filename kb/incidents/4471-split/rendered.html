@@ -62,31 +62,33 @@ bug. It is three.</p>
 
 <h2>The three problems</h2>
 
+<p>#4471 holds 412 unique reports (427 rows in the export, 15 of them re-sent across overlapping
+export pages). <code>causes.ts</code>'s own <code>groupByCause</code> splits them 379 / 33 by cause. A third
+problem sits inside that 379, found only by reading bodies, not counted by <code>causes.ts</code> at all.</p>
+
 <table>
   <thead><tr><th>problem</th><th>reports</th><th>tenants</th><th>what is actually happening</th></tr></thead>
   <tbody>
     <tr>
       <td>parser reads month-first</td>
-      <td><b>374</b></td>
+      <td><b>379</b> (desk's own cause split)</td>
       <td>all 11</td>
       <td>Every tenant here writes day-first dates. The shared parser always reads <code>MM/DD</code>, so app, email, and <code>booking-v2</code>-form submissions come out with month and day swapped.</td>
     </tr>
     <tr>
       <td><code>booking-v3</code> hint mismatches locale</td>
-      <td><b>33</b></td>
+      <td><b>33</b> (desk's own cause split)</td>
       <td>alder.physio, copper.studio, pale.harbour</td>
       <td>The <code>booking-v3</code> form prints a <code>MM/DD/YYYY</code> hint to tenants whose locale is day-first. People type what the hint says; the form then parses it the tenant's (day-first) way. Same symptom as the row above, different cause, a different fix.</td>
     </tr>
     <tr>
       <td>one-day shift, not a swap</td>
-      <td><b>5</b></td>
+      <td><b>5</b> (inside the 379 above, not separate from it)</td>
       <td>kettle.books, alder.physio, nine.lanterns, pale.harbour, lantern.row</td>
-      <td>Reports like "12 May showed as 11 May" and "Lisbon got Tuesday, Toronto got Monday, same meeting" are off by exactly one day, same month. A month/day swap does not produce that. This looks like a timezone/DST bug, unrelated to the other two.</td>
+      <td>Reports like "12 May showed as 11 May" and "Lisbon got Tuesday, Toronto got Monday, same meeting" are off by exactly one day, same month. A month/day swap does not produce that. <code>causes.ts</code> has no category for this, so <code>groupByCause</code> counts these 5 as <code>parser</code> anyway. They are a third, unrelated bug, not a parser miss.</td>
     </tr>
   </tbody>
 </table>
-
-<p>374 + 33 + 5 = 412 — the whole of #4471.</p>
 
 <h2>How the first two were found</h2>
 

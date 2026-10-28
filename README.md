@@ -12,6 +12,6 @@ on subject line alone.
 
 | problem | reports |
 |---|---|
-| parser reads month-first | 374 |
-| `booking-v3` hint mismatches locale | 33 |
-| one-day shift, not a swap | 5 |
+| parser reads month-first | 379 (desk's own cause split) |
+| `booking-v3` hint mismatches locale | 33 (desk's own cause split) |
+| one-day shift, not a swap | 5 (inside the 379 above, not separate from it) |
